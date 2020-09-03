@@ -2,7 +2,7 @@
 
 datasource management {
   provider = ["sqlite", "mysql", "postgresql"]
-  url      = env("PMT_MANAGEMENT_URL")
+  url      = env("PMP_MANAGEMENT_URL")
 }
 
 generator client {
@@ -14,4 +14,5 @@ generator client {
 model Tenant {
   name String @id
   url  String
+  schemaName String?
 }

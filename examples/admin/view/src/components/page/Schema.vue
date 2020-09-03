@@ -21,11 +21,13 @@
                 @selection-change="handleSelectionChange"
             >
                 <el-table-column prop="name" label="schema name"></el-table-column>
-                <el-table-column prop="ctime" label="ctime"></el-table-column>
-                <el-table-column prop="mtime" label="mtime"></el-table-column>
-                <el-table-column prop="birthtime" label="birthtime"></el-table-column>
-                <el-table-column prop="size" label="size" width="100"></el-table-column>
-                <el-table-column label="operation" width="360" align="center">
+                <el-table-column prop="mtime" label="mtime">
+                    <template slot-scope="scope">
+                        <div>{{ scope.row.mtime|dateFilter }}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="size" label="size" width="50"></el-table-column>
+                <el-table-column label="operation" width="330" align="center">
                     <template slot-scope="scope">
                         <el-button
                             type="text"
@@ -58,11 +60,11 @@
 
         <!-- 编辑弹出框 -->
         <el-dialog :title="addFlag?'create new':'edit'" :visible.sync="editVisible" width="70%">
-            <el-form ref="form" :model="form" label-width="120px">
-                <el-form-item label="schema name">
+            <el-form ref="form" :model="form" label-width="120px" :rules="rules">
+                <el-form-item label="schema name" prop="name">
                     <el-input placeholder="end with .prisma" v-model="form.name" :readOnly="!addFlag"></el-input>
                 </el-form-item>
-                <el-form-item label="content">
+                <el-form-item label="content" prop="content">
                     <el-input type="textarea" :rows="20" v-model="form.content"></el-input>
                 </el-form-item>
             </el-form>
@@ -77,9 +79,18 @@
 
 <script>
 import { schemaList,schemaGet,schemaDelete ,schemaUpdate,schemaCreate,schemaGenerate,schemaGenerateRemove} from '../../api/schema';
+import  moment from 'moment'
 export default {
     name: 'basetable',
     data() {
+         var newReg2 = (rule, value, callback) => {
+            let pattrn = /^[a-zA-Z0-9]+[.](prisma)$/
+            if (!pattrn.test(value)) {
+                callback(new Error("eg.xxxx.prisma"));
+            } else {
+                callback();
+            }
+         };
         return {
             query: {
                 address: '',
@@ -96,12 +107,26 @@ export default {
             idx: -1,
             id: -1,
             addFlag:false,
-            loading:false
+            loading:false,
+            rules:{
+                name: [{ required: true, message: "input name", trigger: "blur" },
+                       { validator:newReg2 , trigger: "blur" }],
+                content:[{ required: true, message: "input prisma content", trigger: "blur" }],
+            }
         };
     },
     created() {
         this.getData();
     },
+    filters: {
+        dateFilter: value => {
+        if (!value) {
+            return "";
+        }
+        let time = new Date(value);
+        return moment(time).format("YYYY-MM-DD HH:mm");
+        }
+   },
     methods: {
         // 获取 easy-mock 的模拟数据
         getData() {
@@ -126,12 +151,12 @@ export default {
         // 删除操作
         handleDelete(index, row) {
             // 二次确认删除
-            this.$confirm('确定要删除吗？', '提示', {
+            this.$confirm('delete?', 'warning', {
                 type: 'warning'
             })
                 .then(() => {
                     schemaDelete(row.name).then(res=>{
-                       this.$message.success('删除成功');
+                       this.$message.success('delete success');
                        this.getData();
                     })
                     
@@ -165,7 +190,7 @@ export default {
             }).then(() => {
                   this.loading=true
                     schemaGenerate(row.name).then(res=>{
-                        this.$message.success(`generate 执行成功`);
+                        this.$message.success(`generate success`);
                          this.loading=false
                          this.getData();
                     }).catch(err=>{
@@ -179,7 +204,7 @@ export default {
             }).then(() => {
                  this.loading=true
                 schemaGenerateRemove(row.name).then(res=>{
-                    this.$message.success(`remove client 执行成功`);
+                    this.$message.success(`remove client success`);
                     this.loading=false
                     this.getData();
                  }).catch(err=>{
@@ -189,19 +214,23 @@ export default {
         },
         // 保存编辑
         saveEdit() {
-            if(!this.addFlag){
-                schemaUpdate(this.form.name,this.form).then(res=>{
-                    this.editVisible = false;
-                    this.$message.success(`修改${this.form.name} 行成功`);
-                    this.getData();
-                })
-            }else{
-                 schemaCreate(this.form.name,this.form).then(res=>{
-                    this.editVisible = false;
-                    this.$message.success(`add new success`);
-                    this.getData();
-                })
-            }
+             this.$refs["form"].validate(async valid => {
+                 if(valid){
+                    if(!this.addFlag){
+                        schemaUpdate(this.form.name,this.form).then(res=>{
+                            this.editVisible = false;
+                            this.$message.success(`edit [${this.form.name} ]success`);
+                            this.getData();
+                        })
+                    }else{
+                        schemaCreate(this.form.name,this.form).then(res=>{
+                            this.editVisible = false;
+                            this.$message.success(`add new success`);
+                            this.getData();
+                        })
+                    }
+                 }
+             })
            
         },
         // 分页导航

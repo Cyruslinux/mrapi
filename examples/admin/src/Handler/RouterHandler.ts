@@ -3,65 +3,68 @@ import Recover from './Recover'
 import assert from 'assert'
 import dal from '../dal'
 export default [
-    //获取路由列表
+    // 获取路由列表
     {
         method: 'GET',
-        url: `/router/list`,
-        handler: Recover(async (req: express.Request, res: express.Response) => {
-            assert(dal.server,"server is not running")
-            assert(dal.server.app._router,"no routers")
-            console.log(dal.server.app)
+        url: '/router/list',
+        handler: Recover(async () => {
+            assert(dal.server,'server is not running')
+            assert(dal.server.app._router,'no routers')
             const routes = dal.server.app._router.stack
-            let list = []
-            for (let item of routes) {
-               
+            const list = []
+            for (const item of routes) {
                 list.push({
                     name: item.name,
                     path: item.path,
-                    regexp: item.regexp.toString()
+                    regexp: item.regexp.toString(),
                 })
             }
             return list
-        })
+        }),
     },
     {
         method: 'get',
-        url: `/router/add/:name`,
-        handler: Recover(async (req: express.Request, res: express.Response) => {
-            assert(dal.server,"start server first")
-            assert(req.params.name,"params error")
-            const name=req.params.name.split('.')[0]
+        url: '/router/add/:name',
+        handler: Recover(async (req: express.Request) => {
+            assert(dal.server,'start server first')
+            assert(req.params.name,'params error')
+            const name = req.params.name.split('.')[0]
             const routes = dal.server.app._router.stack
-            let isOk=false
-            for (let item of routes) {
-                  
-                    if(item.regexp.test(`/graphql/${name}`)){
-                        isOk=true
+            let isOk = false
+            for (const item of routes) {
+                    if(item.regexp.test(`/graphql/${name}`)) {
+                        isOk = true
                         break
                     }
             }
-            if(isOk){//更新路由
+            if(isOk) { // 更新路由
                 dal.removeSchema(name)
             }
             dal.addSchema(name)
-            return "ok"
-        })
+            return 'ok'
+        }),
     },
     {
         method: 'delete',
-        url: `/router/remove`,
-        handler: Recover(async (req: express.Request, res: express.Response) => {
+        url: '/router/remove',
+        handler: Recover(async (req: express.Request) => {
             const routes = dal.server.app._router.stack
-             let isOk=false
-            for (let item of routes) {
+             let isOk = false; let re
+            for (const item of routes) {
                 console.log(item)
-                if(item.regexp.toString()===req.query.name){
-                    isOk=true
+                if(item.regexp.toString() === req.query.name) {
+                    re = item.regexp
+                    isOk = true
                     break
                 }
             }
-
-           return "ok"//dal.removeSchema(req.params.name)
-        })
+            if(isOk) {
+                // @ts-expect-error
+               const ss = req.query.name.replace(new RegExp('\\\\','g'),'')
+               const result = re.exec(ss.replace('/^',''))
+               dal.removeSchema(result[0].split('/')[2])
+            }
+           return 'OK'
+        }),
     },
 ]

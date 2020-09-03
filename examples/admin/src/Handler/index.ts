@@ -1,10 +1,13 @@
-import DefaultHandler from './default'
+
 import ServerHandler from './ServerHandler'
 import RouterHandler from './RouterHandler'
 import SchemaHandler from './SchemaHandler'
+import ManagementHandler from './ManagementHandler'
+import ConfigHandler from './ConfigHandler'
 export default[
-    ...DefaultHandler,
     ...ServerHandler,
     ...RouterHandler,
-    ...SchemaHandler
+    ...SchemaHandler,
+    ...ManagementHandler,
+    ...ConfigHandler,
 ]

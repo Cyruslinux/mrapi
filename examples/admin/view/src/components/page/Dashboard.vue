@@ -1,32 +1,101 @@
 <template>
-    <div>
-        <el-card shadow="hover" class="mgb20" style="height:252px;">
-          <div>server info:</div>
-          <div>{{serverData}}</div>
-          <div>server operations:</div>
-          <div>port:1358</div>
-          <div>...</div>
-           <el-button type="primary"  @click="serverStart">server start</el-button>
+    <div style="padding-bottom:20px">
+      <el-row :gutter="20">
+        <el-col :span="12">
+            <el-card shadow="hover" class="mgb20" style="height:290px;">
+                <div class="crumbs">
+                    <el-breadcrumb separator="/">
+                        <el-breadcrumb-item>
+                            <i class="el-icon-lx-cascades"></i> config
+                        </el-breadcrumb-item>
+                    </el-breadcrumb>
+                </div>
+                <el-form label-width="120px" style="height:200px;">
+                    <el-form-item  label="managementUrl">
+                        <el-input v-model="managementUrl" ></el-input>
+                    </el-form-item>
+                 </el-form>
+                <el-button type="primary"   @click="serverInit">tenant init</el-button>
+            </el-card>
+        </el-col>
+        <el-col :span="12">
+             <el-card shadow="hover" class="mgb20" style="height:290px;overflow-y: scroll;">
+                    <div class="crumbs">
+                        <el-breadcrumb separator="/">
+                            <el-breadcrumb-item>
+                                <i class="el-icon-lx-cascades"></i> server info
+                            </el-breadcrumb-item>
+                        </el-breadcrumb>
+                    </div>
+                   <el-form label-width="100px" style="height:200px;">
+                        <el-form-item  label="host">
+                            {{serverData.host}}
+                        </el-form-item>
+                        <el-form-item  label="port">
+                            <el-input v-model="serverData.port" placeholder="1358"></el-input>
+                        </el-form-item>
+                        <el-form-item  label="tenantIdentity">
+                            {{serverData.tenantIdentity}}
+                        </el-form-item>
+                         <el-form-item  label="serverStatus">
+                            {{serverData.serverStatus}}
+                        </el-form-item>
+                    </el-form>
+                   
+                    <el-button type="primary" :disabled="serverData.serverStatus"  @click="serverStart">server start</el-button>
 
-           <el-button type="info"  @click="serverStop">server stop</el-button>
-        </el-card>
+                    <el-button type="info" :disabled="!serverData.serverStatus"  @click="serverStop">server stop</el-button>
+                
+            </el-card>
+        </el-col>
        
+     </el-row>
+      <el-row :gutter="20">
+          <el-col :span="24">
+             <el-card shadow="hover" class="mgb20" style="height:400px;overflow-y: scroll;">
+                 
+                 <tenant refs="tenantRef"></tenant>
+            </el-card>
+         </el-col>
+     </el-row>
+     <el-row :gutter="20">
+          <el-col :span="12">
+             <el-card shadow="hover" class="mgb20" style="height:400px;overflow-y: scroll;">
+                 
+                 <Schema></Schema>
+            </el-card>
+         </el-col>
+         <el-col :span="12">
+             <el-card shadow="hover" class="mgb20" style="height:400px;overflow-y: scroll;">
+                
+                 <Routers ref="routers"></Routers>
+            </el-card>
+         </el-col>
+     </el-row>
+    
     </div>
 </template>
 
 <script>
 import bus from '../common/bus';
 import {serverInfo,serverStart,serverStop} from '../../api/server'
+import {configInfo,configInit} from '../../api/config'
+import Routers from './Routers'
+import Schema from './Schema'
+import tenant from './tenant'
 export default {
     name: 'dashboard',
     data() {
         return {
             serverData:{},
             serverStatus:false,
+            managementUrl:null
         };
     },
     components: {
-        
+        Routers,
+        Schema,
+        tenant
     },
     computed: {
 
@@ -35,20 +104,32 @@ export default {
         this.init()
     },
     methods: {
-       async init(){
-           this.serverData=await serverInfo()
-          // this.serverStatus=this.serverData.serverStatus
+        init(){
+            
+          serverInfo().then(res=>{
+               this.serverData=res
+           })
+           configInfo().then(res=>{
+               
+                this.managementUrl=res.defualt.managementUrl
+           })
+        },
+        serverInit(){
+            configInit({managementUrl:this.managementUrl}).then(res=>{
+                 this.$message.success('init success');
+                 this.$refs.tenantRef.getData()
+            })
         },
      async serverStart(){
          if( await serverStart()=="OK"){
-             this.serverStatus=true
+            this.$refs.routers.getData()
              this.init()
              this.$message.success('启动成功');
          }
      },
      async serverStop(){
            if( await serverStop()=="OK"){
-               this.serverStatus=false
+               this.init()
              this.$message.success('服务已停止');
          }
      }

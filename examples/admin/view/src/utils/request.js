@@ -1,9 +1,10 @@
 import axios from 'axios';
 import { MessageBox, Message } from "element-ui";
+import *as base from '../../public/base'
 const service = axios.create({
     // process.env.NODE_ENV === 'development' 来判断是否开发环境
     // easy-mock服务挂了，暂时不使用了
-     baseURL:'/api',//'http://localhost:13588',//
+     baseURL:base.defualt[process.env.NODE_ENV].base_url,//'http://localhost:13588',//
     timeout: 60000
 });
 

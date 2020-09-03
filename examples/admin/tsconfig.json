@@ -1,4 +1,6 @@
-{
+{ 
+  "extends": "../../tsconfig.json",
+  "compileOnSave":false,
   "compilerOptions": {
     "incremental": true,
 
@@ -25,5 +27,5 @@
 
     "composite": true
   },
-  "include": ["src/**/*", "config", "scripts"]
+  "include": ["src/**/*", "config", "scripts","view_dist"]
 }

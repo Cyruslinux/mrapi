@@ -73,8 +73,8 @@ export default {
                 },
                 {
                     icon: 'el-icon-lx-emoji',
-                    index: 'icon',
-                    title: 'management db'
+                    index: 'tenant',
+                    title: 'tenant management'
                 },
             ]
         };

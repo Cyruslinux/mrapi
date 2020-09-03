@@ -1,66 +1,46 @@
-import express from 'express'
 import Recover from './Recover'
 import dal from '../dal'
 import assert from 'assert'
-import {GetPrismaClientName }from '../Service/CommonService'
-var net=require('net')
-const portIsOccupied=(port:number)=>{
-    return new Promise((resolve, reject) => {
-        var server=net.createServer().listen(port)
-        server.on('listening',function(){
-            server.close()
-            resolve(false)
-        })
-        server.on('error',function(err){
-            if(err.code==='EADDRINUSE'){
-                resolve(true)
-            }
-        })
-
-   })
-}
+import { GetPrismaClientName,CheckProcess ,CheckTenantManagement }from '../Service/CommonService'
 export default[
     {
         method: 'GET',
-        url: `/server/start`,
-        handler:Recover(async (req:express.Request,res:express.Response)=>{
-           if(!dal.server){
-             dal.start()
-             const arr=await  GetPrismaClientName()
-             console.log(arr)
-             for(let item of arr){
+        url: '/server/start',
+        handler: Recover(async () => {
+           if(!dal.server) {
+              dal.start()
+             const arr = await GetPrismaClientName()
+             for(const item of arr) {
                  dal.addSchema(item)
              }
            }else{
-            const status=await portIsOccupied(dal.server.options.port)
-            console.log("----",status,dal.server.options.port)
-             assert(!status,"server is running")
-             //TODO
-              dal.start()
+               // @ts-expect-error
+             const checkRes = await CheckProcess(dal.server.options.port)
+             assert(!dal.server.serverRunningStatus && !checkRes,'server is running')
+
+             dal.start()
           }
-            return "OK"
-        })
+            return 'OK'
+        }),
     },
     {
         method: 'GET',
-        url: `/server/stop`,
-        handler:Recover(async (req:express.Request,res:express.Response)=>{
-            assert(dal.server,"server is not exist")
+        url: '/server/stop',
+        handler: Recover(async () => {
+            assert(dal.server,'server is not exist')
+            assert(dal.server.serverRunningStatus,'server is stoped')
             dal.server.stop()
-            return "OK"
-        })
+            return 'OK'
+        }),
     },
     {
         method: 'GET',
-        url: `/server/info`,
-        handler:Recover(async (req:express.Request,res:express.Response)=>{
-           
-             assert(dal.server,"server is not exist，please start server")
-            const port=13588//dal.server.options.port
-            const status=await portIsOccupied(port)
-            console.log(`${port} 使用情况-->${status}`)
-            //@ts-ignore
-            return {...dal.server.options,serverStatus:!status}
-        })
+        url: '/server/info',
+        handler: Recover(async () => {
+             assert(await CheckTenantManagement(),'please init tenant')
+             assert(dal.server,'server is not exist，please start server')
+            // @ts-expect-error
+            return { ...dal.server.options,serverStatus: dal.server.serverRunningStatus,tenantStatus: await CheckTenantManagement() }
+        }),
     },
 ]

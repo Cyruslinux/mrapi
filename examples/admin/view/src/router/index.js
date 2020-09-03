@@ -20,9 +20,9 @@ export default new Router({
                     meta: { title: 'server' }
                 },
                 {
-                    path: '/icon',
-                    component: () => import(/* webpackChunkName: "icon" */ '../components/page/Icon.vue'),
-                    meta: { title: 'routers' }
+                    path: '/tenant',
+                    component: () => import(/* webpackChunkName: "icon" */ '../components/page/tenant.vue'),
+                    meta: { title: 'tenant' }
                 },
                 {
                     path: '/routers',

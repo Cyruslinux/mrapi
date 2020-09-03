@@ -13,3 +13,5 @@ examples/admin/view/node_modules
 examples/admin/view/dist
 examples/admin/node_modules
 pnpm-lock.yaml
+examples/admin/view_dist
+examples/admin/Dockerfile

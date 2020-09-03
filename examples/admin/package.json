@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only ./src/app.ts",
+    "dev": "ts-node  --transpile-only ./src/app.ts",
+    "start": "cross-env NODE_ENV=production node ./src/app.ts",
     "clean": "rm -rf dist && rm -rf node_modules",
     "build": "rm -rf dist && tsc",
     "generate": "npm run fixbug && npm run gen1 && npm run gen2",
@@ -31,7 +32,9 @@
     "fs-extra": "9.0.1",
     "prettier": "2.0.5",
     "typescript": "^3.9.6",
-    "ts-node-dev": "1.0.0-pre.51"
+    "ts-node-dev": "1.0.0-pre.51",
+    "ts-node":"9.0.0",
+    "chalk": "^4.1.0"
   },
   "prettier": {
     "semi": false,

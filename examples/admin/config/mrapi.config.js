@@ -1,3 +1,1 @@
-exports.defualt = {
-  managementUrl: 'file:config/db/management.db'
-}
+exports.defualt = {"managementUrl":"file:config/db/management.db"}
