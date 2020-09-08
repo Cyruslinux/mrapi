@@ -31,7 +31,7 @@ export default[
           serverInfo.defualt.serverInfo = options
           const str = JSON.stringify(serverInfo)
           await fs.writeFileSync('config/mrapi.config.js', `module.exports = ${str}`, 'utf-8')
-            return 'OK'
+          return 'OK'
         }),
     },
     {

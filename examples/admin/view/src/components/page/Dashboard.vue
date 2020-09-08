@@ -29,10 +29,10 @@
                     </div>
                    <el-form label-width="100px" style="height:200px;">
                         <el-form-item  label="host">
-                            <el-input v-model="serverData.host" placeholder="0.0.0.0"></el-input>
+                            <el-input v-model="serverData.host" placeholder="0.0.0.0" disabled ></el-input>
                         </el-form-item>
                         <el-form-item  label="port">
-                            <el-input v-model="serverData.port" placeholder="1358"></el-input>
+                            <el-input v-model="serverData.port" placeholder="1358" disabled></el-input>
                         </el-form-item>
                         <el-form-item  label="tenantIdentity">
                              <el-input v-model="serverData.tenantIdentity" placeholder="mrapi-pmt"></el-input>
