@@ -1,1 +1,1 @@
-exports.defualt = {"managementUrl":"file:config/db/management.db"}
+exports.defualt = {"managementUrl":"file:config/db/management.db","serverInfo":{"port":1359,"host":"0.0.0.0","tenantIdentity":"mrapi-pmt"}}

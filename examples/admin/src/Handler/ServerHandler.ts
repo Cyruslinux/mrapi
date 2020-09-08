@@ -1,25 +1,36 @@
 import Recover from './Recover'
-import dal from '../dal'
+import express from 'express'
+import dalServer from '../dal'
 import assert from 'assert'
-import { GetPrismaClientName,CheckProcess ,CheckTenantManagement }from '../Service/CommonService'
+import * as fs from 'fs'
+import { GetPrismaClientName ,CheckTenantManagement }from '../Service/CommonService'
+import { ServerOptions } from '@mrapi/dal/lib/types'
+const serverInfo = require('../../config/mrapi.config.js')
 export default[
     {
         method: 'GET',
         url: '/server/start',
-        handler: Recover(async () => {
-           if(!dal.server) {
-              dal.start()
+        handler: Recover(async (req:express.Request) => {
+             const options:ServerOptions = {
+                 port: Number(req.query.port),
+                 host: String(req.query.host),
+                 tenantIdentity: String(req.query.tenantIdentity),
+             }
+           //  const checkRes = await CheckProcess(options.port)
+             assert(!dalServer.serverStatus,'server is runnning')
+           if(!dalServer.dal.server) {
+             dalServer.dal.start(options)
              const arr = await GetPrismaClientName()
              for(const item of arr) {
-                 dal.addSchema(item)
+                dalServer.dal.addSchema(item)
              }
            }else{
-               // @ts-expect-error
-             const checkRes = await CheckProcess(dal.server.options.port)
-             assert(!dal.server.serverRunningStatus && !checkRes,'server is running')
-
-             dal.start()
+             dalServer.dal.start(options)
           }
+          dalServer.serverStatus = true
+          serverInfo.defualt.serverInfo = options
+          const str = JSON.stringify(serverInfo)
+          await fs.writeFileSync('config/mrapi.config.js', `module.exports = ${str}`, 'utf-8')
             return 'OK'
         }),
     },
@@ -27,9 +38,10 @@ export default[
         method: 'GET',
         url: '/server/stop',
         handler: Recover(async () => {
-            assert(dal.server,'server is not exist')
-            assert(dal.server.serverRunningStatus,'server is stoped')
-            dal.server.stop()
+            assert(dalServer.dal.server,'server is not exist')
+           // assert(dal.server.serverRunningStatus,'server is stoped')
+           dalServer.dal.server.stop()
+           dalServer.serverStatus = false
             return 'OK'
         }),
     },
@@ -38,9 +50,8 @@ export default[
         url: '/server/info',
         handler: Recover(async () => {
              assert(await CheckTenantManagement(),'please init tenant')
-             assert(dal.server,'server is not exist，please start server')
-            // @ts-expect-error
-            return { ...dal.server.options,serverStatus: dal.server.serverRunningStatus,tenantStatus: await CheckTenantManagement() }
+             assert(dalServer.dal.server,'server is not exist，please start server')
+            return { ...serverInfo.defualt.serverInfo,serverStatus: dalServer.serverStatus,tenantStatus: await CheckTenantManagement() }
         }),
     },
 ]

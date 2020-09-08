@@ -1,12 +1,11 @@
 { 
-  "extends": "../../tsconfig.json",
+  //"extends": "../../tsconfig.json",
   "compileOnSave":false,
   "compilerOptions": {
     "incremental": true,
-
-    "outDir": "dist",
+    "rootDir": "./src",
+    "outDir": "./dist",
     "baseUrl": ".",
-
     "target": "es2018",
     "module": "commonjs",
     "moduleResolution": "node",
@@ -27,5 +26,6 @@
 
     "composite": true
   },
-  "include": ["src/**/*", "config", "scripts","view_dist"]
+  "include": ["src/**/*", "config", "scripts","view_dist"],
+  "exclude":["node_modules"]
 }

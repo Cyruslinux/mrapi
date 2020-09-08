@@ -10,12 +10,12 @@
                         </el-breadcrumb-item>
                     </el-breadcrumb>
                 </div>
-                <el-form label-width="120px" style="height:200px;">
+                <el-form label-width="120px" style="height:200px;" >
                     <el-form-item  label="managementUrl">
                         <el-input v-model="managementUrl" ></el-input>
                     </el-form-item>
                  </el-form>
-                <el-button type="primary"   @click="serverInit">tenant init</el-button>
+                <el-button type="primary" :loading="initLoading"  @click="serverInit">tenant init</el-button>
             </el-card>
         </el-col>
         <el-col :span="12">
@@ -29,13 +29,13 @@
                     </div>
                    <el-form label-width="100px" style="height:200px;">
                         <el-form-item  label="host">
-                            {{serverData.host}}
+                            <el-input v-model="serverData.host" placeholder="0.0.0.0"></el-input>
                         </el-form-item>
                         <el-form-item  label="port">
                             <el-input v-model="serverData.port" placeholder="1358"></el-input>
                         </el-form-item>
                         <el-form-item  label="tenantIdentity">
-                            {{serverData.tenantIdentity}}
+                             <el-input v-model="serverData.tenantIdentity" placeholder="mrapi-pmt"></el-input>
                         </el-form-item>
                          <el-form-item  label="serverStatus">
                             {{serverData.serverStatus}}
@@ -54,7 +54,7 @@
           <el-col :span="24">
              <el-card shadow="hover" class="mgb20" style="height:400px;overflow-y: scroll;">
                  
-                 <tenant refs="tenantRef"></tenant>
+                 <tenant ref="tenantRef"></tenant>
             </el-card>
          </el-col>
      </el-row>
@@ -68,7 +68,7 @@
          <el-col :span="12">
              <el-card shadow="hover" class="mgb20" style="height:400px;overflow-y: scroll;">
                 
-                 <Routers ref="routers"></Routers>
+                 <Routers ref="routers" :serverData="serverData"></Routers>
             </el-card>
          </el-col>
      </el-row>
@@ -87,9 +87,14 @@ export default {
     name: 'dashboard',
     data() {
         return {
-            serverData:{},
+            serverData:{
+                host:"0.0.0.0",
+                port:1358,
+                tenantIdentity:"mrapi-pmt"
+            },
             serverStatus:false,
-            managementUrl:null
+            managementUrl:null,
+            initLoading:false
         };
     },
     components: {
@@ -115,13 +120,23 @@ export default {
            })
         },
         serverInit(){
+          
+            if(this.managementUrl==null||this.managementUrl==''){
+               this.$message.error('managementUrl cannot be null');
+                return
+            }
+            this.initLoading=true
             configInit({managementUrl:this.managementUrl}).then(res=>{
+                this.initLoading=false
                  this.$message.success('init success');
                  this.$refs.tenantRef.getData()
+            }).catch(err=>{
+                this.$message.error('init failed');
+                this.initLoading=false
             })
         },
      async serverStart(){
-         if( await serverStart()=="OK"){
+         if( await serverStart(this.serverData)=="OK"){
             this.$refs.routers.getData()
              this.init()
              this.$message.success('启动成功');

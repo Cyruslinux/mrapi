@@ -8,11 +8,11 @@ export const routerList = query => {
     });
 };
 
-export const routerAdd = name => {
+export const routerAdd = data=> {
     return request({
-        url: '/router/add/'+name,
+        url: '/router/add/'+data.name,
         method: 'get',
-     //   params: query
+        params:data
     });
 };
 

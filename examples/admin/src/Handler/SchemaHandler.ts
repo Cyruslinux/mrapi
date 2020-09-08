@@ -4,7 +4,7 @@ import * as fs from 'fs'
 import assert from 'assert'
 import { GetPrismaClientName }from '../Service/CommonService'
 import { spawnShell, runShell } from '@mrapi/common'
-import dal from '../dal'
+import dalServer from '../dal'
 const multer = require('multer')
 var upload = multer().single('file')
 const uploadPromise = async (req: express.Request, res: express.Response) => {
@@ -127,11 +127,11 @@ export default [
         handler: Recover(async (req: express.Request) => {
             assert(req.params.name,'params error')
             const name = req.params.name.split('.')[0]
-            if(dal.server) {
+            if(dalServer.dal.server) {
                 // 先卸载路由
                 console.log(`remove router ${name}`)
-                dal.server.removeRoute(name)
-                dal.removeSchema(name)
+                dalServer.dal.server.removeRoute(name)
+                dalServer.dal.removeSchema(name)
             }
             // 再删除client
             await runShell(`rm -rf node_modules/.prisma-mrapi/${name}`)

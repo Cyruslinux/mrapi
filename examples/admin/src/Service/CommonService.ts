@@ -1,6 +1,7 @@
 
 import * as fs from 'fs'
 import { runShell } from '@mrapi/common'
+const net = require('net')
 export const GetPrismaClientName = async function() {
     let files: string[] = []
     try{
@@ -13,10 +14,11 @@ export const GetPrismaClientName = async function() {
 
 export const CheckProcess = async function(port:number) {
     try{
-      await runShell(`lsof -i  tcp:${port}`)
+    const res = await runShell(`lsof -i:${port}`)
+    console.log('lsof -i -->  used:',res)
      return true
     }catch(err) {
-      console.log('err',err)
+      console.log('lsof -i --> no use:',err)
       return false
     }
 }
@@ -28,4 +30,28 @@ export const CheckTenantManagement = async function() {
      }catch(err) {
        return false
      }
+}
+/**
+ *检查端口是否被占用
+ * @param port
+ */
+export const portInUse = async function (port:Number) {
+  return await new Promise((resolve) => {
+     try {
+      const server = net.createServer().listen(port)
+      server.on('listening',function() {
+        console.log(port,'未被占用')
+          server.close()
+          resolve(false)
+      })
+      server.on('error',function(err:any) {
+        console.log(port,'占用')
+          if(err.code == 'EADDRINUSE') {
+            resolve(true)
+          }
+      })
+    } catch (error) {
+      console.log(333)
+    }
+  })
 }

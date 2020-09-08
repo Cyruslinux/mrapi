@@ -7,11 +7,11 @@ export const serverInfo = () => {
     });
 };
 
-export const serverStart = () => {
+export const serverStart = query => {
     return request({
         url: '/server/start',
         method: 'get',
-     //   params: query
+        params: query
     });
 };
 

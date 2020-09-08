@@ -110,9 +110,6 @@ export default {
            const res=await schemaList()
            let arr=[]
                for(let item of res){
-                   if(!item.client){
-                       continue
-                   }
                    arr.push({
                        label:item.name,
                        value:item.name

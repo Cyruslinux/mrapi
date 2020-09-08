@@ -50,15 +50,26 @@
 
         <!-- 编辑弹出框 -->
         <el-dialog title="add router" :visible.sync="editVisible" width="30%">
-            <el-form ref="form" :model="form" label-width="120px">
+            <el-form ref="form" :model="form" label-width="120px" :rules="rules">
                 
-                <el-form-item label="select schema">
+                <el-form-item label="select schema" prop="name">
                      <el-select v-model="form.name" placeholder="please select" >
                          <el-option
                             v-for="item in schemaSelectData"
                             :key="item.value"
                             :label="item.label"
                             :value="item.value">
+                            </el-option>
+                        
+                     </el-select>
+                </el-form-item>
+                <el-form-item label="default tenant " prop="tenant">
+                     <el-select v-model="form.tenant" placeholder="please select" >
+                         <el-option
+                            v-for="item in selectTenantData"
+                            :key="item.name"
+                            :label="item.name"
+                            :value="item.name">
                             </el-option>
                         
                      </el-select>
@@ -74,9 +85,11 @@
 
 <script>
 import { routerList,routerRemove ,routerAdd} from '../../api/router';
+import { manageList} from '../../api/manage';
 import { schemaList} from '../../api/schema';
 export default {
     name: 'basetable',
+    props:["serverData"],
     data() {
         return {
             query: {
@@ -90,10 +103,17 @@ export default {
             delList: [],
             editVisible: false,
             pageTotal: 0,
-            form: {},
+            form: {
+                name:null
+            },
             idx: -1,
             id: -1,
-            schemaSelectData:[]
+            schemaSelectData:[],
+            rules:{
+                name: [{ required: true, message: "select prisma", trigger: "blur" }],
+            },
+            tenantData:[],
+            selectTenantData:[]
         };
     },
     created() {
@@ -135,7 +155,13 @@ export default {
         
        async  handleAdd() {
            await this.schemaSelect()
+           this.tenantList()
            this.editVisible=true
+        },
+        tenantList(){
+            manageList().then(res=>{
+              this.tenantData=res
+            })
         },
         // 删除操作
         handleDelete(index, row) {
@@ -173,25 +199,36 @@ export default {
         },
         // 保存编辑
         saveEdit() {
-            this.editVisible = false;
-             routerAdd(this.form.name).then(res=>{
-                this.$message.success(`add success`);
-                this.getData();
+             this.$refs["form"].validate(async valid => {
+                 if(valid){
+                    this.editVisible = false;
+                    routerAdd(this.form).then(res=>{
+                        this.$message.success(`add success`);
+                        this.getData();
+                    })
+                 }
              })
         },
         handleGraphqlUi(index, row){
-            
+            console.log(this.serverData)
            let name=row.regexp.replace("/^\\",'')
            let  xx=name.replace(new RegExp('\\\\','g'),"");
-           window.open(`http://localhost:1358${xx}`, "_blank"); 
+           window.open(`http://${this.serverData.host}:${this.serverData.port}${xx}`, "_blank"); 
         },
         handleGraphqlswagger(index, row){
               let name=row.regexp.replace("/^\\",'')
            let  xx=name.replace(new RegExp('\\\\','g'),"");
             let temp=xx.split('?')[0]
-           window.open(`http://localhost:1358${temp.replace('graphql','api')}swagger`, "_blank"); 
+           window.open(`http://${this.serverData.host}:${this.serverData.port}${temp.replace('graphql','api')}swagger`, "_blank"); 
         }
-    }
+    },
+    watch: {
+        'form.name'(oVal,nVal){
+          this.selectTenantData= this.tenantData.filter(item => item.schemaName===oVal||item.schemaName==null);
+           
+        }
+    },
+
 };
 </script>
 

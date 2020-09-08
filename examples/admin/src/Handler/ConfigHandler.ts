@@ -20,7 +20,14 @@ export default [
             const config = require('../../config/mrapi.config.js')
             config.defualt.managementUrl = req.body.managementUrl
             const str = JSON.stringify(config.defualt)
-            process.env.PMP_MANAGEMENT_URL = 'file:../config/db/management.db'
+            const url = String(req.body.managementUrl)
+            if(url.startsWith('file:/')) {
+                process.env.PMP_MANAGEMENT_URL = url
+            }else{
+                process.env.PMP_MANAGEMENT_URL = `${url.split(':')[0]}:../${url.split(':')[1]}`
+            }
+            console.log(process.env.PMP_MANAGEMENT_URL)
+
             await fs.writeFileSync('config/mrapi.config.js', `exports.defualt = ${str}`, 'utf-8')
             try {
                 const ress = await spawnShell('npx mrapi generate --name management')
