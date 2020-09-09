@@ -18,8 +18,9 @@ export default [
         handler: Recover(async (req: express.Request) => {
             assert(req.body.managementUrl,'[managementUrl] cannot be null')
             const config = require('../../config/mrapi.config.js')
-            config.defualt.managementUrl = req.body.managementUrl
-            const str = JSON.stringify(config.defualt)
+            config.default.managementUrl = req.body.managementUrl
+            config.default.dal.enableRepeatRoute = req.body.enableRepeatRoute
+            const str = JSON.stringify(config.default)
             const url = String(req.body.managementUrl)
             if(url.startsWith('file:/')) {
                 process.env.PMP_MANAGEMENT_URL = url
@@ -28,7 +29,7 @@ export default [
             }
             console.log(process.env.PMP_MANAGEMENT_URL)
 
-            await fs.writeFileSync('config/mrapi.config.js', `exports.defualt = ${str}`, 'utf-8')
+            await fs.writeFileSync('config/mrapi.config.js', `exports.default  = ${str}`, 'utf-8')
             try {
                 const ress = await spawnShell('npx mrapi generate --name management')
                 assert(ress === 0,'generate management failed')

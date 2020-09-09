@@ -1,7 +1,25 @@
 
 import * as fs from 'fs'
 import { runShell } from '@mrapi/common'
+import dalServer from '../dal'
 const net = require('net')
+export const GetRouters= function(){
+   if(!dalServer.dal.server||!dalServer.dal.server.app._router){
+       return []
+   }
+  const routes = dalServer.dal.server.app._router.stack
+            const list = []
+            for (const item of routes) {
+               if(item.name=="graphqlMiddleware"){
+                list.push({
+                    name: item.name,
+                    path: item.path,
+                    regexp: item.regexp
+                })
+              }
+            }
+            return list
+}
 export const GetPrismaClientName = async function() {
     let files: string[] = []
     try{

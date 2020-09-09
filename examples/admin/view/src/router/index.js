@@ -20,21 +20,6 @@ export default new Router({
                     meta: { title: 'server' }
                 },
                 {
-                    path: '/tenant',
-                    component: () => import(/* webpackChunkName: "icon" */ '../components/page/tenant.vue'),
-                    meta: { title: 'tenant' }
-                },
-                {
-                    path: '/routers',
-                    component: () => import(/* webpackChunkName: "table" */ '../components/page/Routers.vue'),
-                    meta: { title: 'routers' }
-                },
-                {
-                    path: '/schema',
-                    component: () => import(/* webpackChunkName: "tabs" */ '../components/page/Schema.vue'),
-                    meta: { title: 'schema' }
-                },
-                {
                     path: '/404',
                     component: () => import(/* webpackChunkName: "404" */ '../components/page/404.vue'),
                     meta: { title: '404' }

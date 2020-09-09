@@ -29,6 +29,8 @@ export default [
             assert(dalServer.dal.server,'start server first')
             assert(req.params.name,'params error')
             const name = req.params.name.split('.')[0]
+            const openapi=req.query.openapi
+            console.log("sssss",openapi)
             const routes = dalServer.dal.server.app._router.stack
             let isOk = false
             for (const item of routes) {
@@ -41,15 +43,22 @@ export default [
                 dalServer.dal.removeSchema(name)
             }
             const tenant = req.query.tenant
-            console.log(tenant)
             if(tenant) {
                 dalServer.dal.addSchema(name, {
                        defaultTenant: {
                          name: String(tenant),
                        },
+                       openAPI: {
+                        enable:Boolean(openapi),
+                       }
                      })
             }else{
-                dalServer.dal.addSchema(name)
+                dalServer.dal.addSchema(name,
+                    {
+                        openAPI: {
+                           enable:Boolean( openapi),
+                        }
+                })
             }
 
             return 'ok'
@@ -59,22 +68,9 @@ export default [
         method: 'delete',
         url: '/router/remove',
         handler: Recover(async (req: express.Request) => {
-            const routes = dalServer.dal.server.app._router.stack
-             let isOk = false; let re
-            for (const item of routes) {
-                console.log(item)
-                if(item.regexp.toString() === req.query.name) {
-                    re = item.regexp
-                    isOk = true
-                    break
-                }
-            }
-            if(isOk) {
-                // @ts-expect-error
-               const ss = req.query.name.replace(new RegExp('\\\\','g'),'')
-               const result = re.exec(ss.replace('/^',''))
-               dalServer.dal.removeSchema(result[0].split('/')[2])
-            }
+            assert(req.query.name,'params error')
+             const router=String(req.query.name)
+             dalServer.dal.removeSchema(router.split('.')[0])
            return 'OK'
         }),
     },

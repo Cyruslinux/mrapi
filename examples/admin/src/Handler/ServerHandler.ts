@@ -28,9 +28,9 @@ export default[
              dalServer.dal.start(options)
           }
           dalServer.serverStatus = true
-          serverInfo.defualt.serverInfo = options
-          const str = JSON.stringify(serverInfo)
-          await fs.writeFileSync('config/mrapi.config.js', `module.exports = ${str}`, 'utf-8')
+          serverInfo.default.serverInfo = options
+          const str = JSON.stringify( serverInfo.default)
+          await fs.writeFileSync('config/mrapi.config.js', `exports.default   = ${str}`, 'utf-8')
           return 'OK'
         }),
     },
@@ -51,7 +51,7 @@ export default[
         handler: Recover(async () => {
              assert(await CheckTenantManagement(),'please init tenant')
              assert(dalServer.dal.server,'server is not exist，please start server')
-            return { ...serverInfo.defualt.serverInfo,serverStatus: dalServer.serverStatus,tenantStatus: await CheckTenantManagement() }
+            return { ...serverInfo.default.serverInfo,serverStatus: dalServer.serverStatus,tenantStatus: await CheckTenantManagement() }
         }),
     },
 ]

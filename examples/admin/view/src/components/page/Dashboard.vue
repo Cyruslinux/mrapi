@@ -6,13 +6,16 @@
                 <div class="crumbs">
                     <el-breadcrumb separator="/">
                         <el-breadcrumb-item>
-                            <i class="el-icon-lx-cascades"></i> config
+                            <i class="el-icon-lx-cascades"></i>management config
                         </el-breadcrumb-item>
                     </el-breadcrumb>
                 </div>
-                <el-form label-width="120px" style="height:200px;" >
+                <el-form label-width="150px" style="height:200px;" >
                     <el-form-item  label="managementUrl">
                         <el-input v-model="managementUrl" ></el-input>
+                    </el-form-item>
+                      <el-form-item  label="enableRepeatRoute">
+                        <el-switch v-model="enableRepeatRoute"></el-switch>
                     </el-form-item>
                  </el-form>
                 <el-button type="primary" :loading="initLoading"  @click="serverInit">tenant init</el-button>
@@ -53,26 +56,11 @@
       <el-row :gutter="20">
           <el-col :span="24">
              <el-card shadow="hover" class="mgb20" style="height:400px;overflow-y: scroll;">
+                  <Service ref="service" :serverData="serverData"></Service>
                  
-                 <tenant ref="tenantRef"></tenant>
             </el-card>
          </el-col>
      </el-row>
-     <el-row :gutter="20">
-          <el-col :span="12">
-             <el-card shadow="hover" class="mgb20" style="height:400px;overflow-y: scroll;">
-                 
-                 <Schema></Schema>
-            </el-card>
-         </el-col>
-         <el-col :span="12">
-             <el-card shadow="hover" class="mgb20" style="height:400px;overflow-y: scroll;">
-                
-                 <Routers ref="routers" :serverData="serverData"></Routers>
-            </el-card>
-         </el-col>
-     </el-row>
-    
     </div>
 </template>
 
@@ -80,9 +68,7 @@
 import bus from '../common/bus';
 import {serverInfo,serverStart,serverStop} from '../../api/server'
 import {configInfo,configInit} from '../../api/config'
-import Routers from './Routers'
-import Schema from './Schema'
-import tenant from './tenant'
+import Service from './Service'
 export default {
     name: 'dashboard',
     data() {
@@ -94,13 +80,12 @@ export default {
             },
             serverStatus:false,
             managementUrl:null,
+            enableRepeatRoute:false,
             initLoading:false
         };
     },
     components: {
-        Routers,
-        Schema,
-        tenant
+        Service
     },
     computed: {
 
@@ -115,8 +100,8 @@ export default {
                this.serverData=res
            })
            configInfo().then(res=>{
-               
-                this.managementUrl=res.defualt.managementUrl
+                this.managementUrl=res.default.managementUrl
+                this.enableRepeatRoute=res.default.dal.enableRepeatRoute
            })
         },
         serverInit(){
@@ -126,10 +111,9 @@ export default {
                 return
             }
             this.initLoading=true
-            configInit({managementUrl:this.managementUrl}).then(res=>{
+            configInit({managementUrl:this.managementUrl,enableRepeatRoute:this.enableRepeatRoute}).then(res=>{
                 this.initLoading=false
                  this.$message.success('init success');
-                 this.$refs.tenantRef.getData()
             }).catch(err=>{
                 this.$message.error('init failed');
                 this.initLoading=false
@@ -137,8 +121,8 @@ export default {
         },
      async serverStart(){
          if( await serverStart(this.serverData)=="OK"){
-            this.$refs.routers.getData()
              this.init()
+             this.$refs.service.getData();
              this.$message.success('启动成功');
          }
      },

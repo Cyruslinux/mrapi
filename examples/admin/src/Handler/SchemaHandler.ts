@@ -2,7 +2,7 @@ import express from 'express'
 import Recover from './Recover'
 import * as fs from 'fs'
 import assert from 'assert'
-import { GetPrismaClientName }from '../Service/CommonService'
+import { GetPrismaClientName ,GetRouters}from '../Service/CommonService'
 import { spawnShell, runShell } from '@mrapi/common'
 import dalServer from '../dal'
 const multer = require('multer')
@@ -36,9 +36,17 @@ export default [
             assert(files.length > 0, 'do not exist .schema file')
             const arr = []
             const allClient = await GetPrismaClientName()
+            const routers=GetRouters()
             for (const item of files) {
                 const info = fs.statSync(`config/prisma/${item}`)
                 const prefix = item.split('.')[0]
+                let _router=false
+                for(let i of routers){
+                    if(i.regexp.test(`/graphql/${item.split('.')[0]}`)){
+                        _router=true
+                        break
+                    }
+                }
                 arr.push({
                     name: item,
                     client: allClient.includes(prefix),
@@ -46,6 +54,7 @@ export default [
                     mtime: info.mtime,
                     birthtime: info.birthtime,
                     size: info.size,
+                    router:_router
                 })
             }
             return arr
@@ -79,6 +88,12 @@ export default [
             assert(!clients.includes(req.params.name.split('.')[0]),'remove client first')
             assert(fs.existsSync(`config/prisma/${req.params.name}`), 'file is not exist')
             fs.unlinkSync(`config/prisma/${req.params.name}`)
+
+            //删除租户
+            const PrismaClient = require('.prisma-multi-tenant/management').PrismaClient
+            const prisma = new PrismaClient()
+            await prisma.tenant.deleteMany({where:{schemaName: String(req.params.name) }})
+            
             return 'ok'
         }),
     },

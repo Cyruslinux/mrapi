@@ -3,7 +3,7 @@
         <div class="crumbs">
             <el-breadcrumb separator="/">
                 <el-breadcrumb-item>
-                    <i class="el-icon-lx-cascades"></i> schema list
+                    <i class="el-icon-lx-cascades"></i> service list
                 </el-breadcrumb-item>
             </el-breadcrumb>
         </div>
@@ -20,14 +20,16 @@
                 header-cell-class-name="table-header"
                 @selection-change="handleSelectionChange"
             >
-                <el-table-column prop="name" label="schema name"></el-table-column>
-                <el-table-column prop="mtime" label="mtime">
+                <el-table-column prop="name" label="schema name" width="150"></el-table-column>
+                <el-table-column prop="mtime" label="mtime" width="150">
                     <template slot-scope="scope">
                         <div>{{ scope.row.mtime|dateFilter }}</div>
                     </template>
                 </el-table-column>
                 <el-table-column prop="size" label="size" width="50"></el-table-column>
-                <el-table-column label="operation" width="330" align="center">
+                 <el-table-column prop="description" label="description" ></el-table-column>
+                
+                <el-table-column label="operation" width="500" align="center">
                     <template slot-scope="scope">
                         <el-button
                             type="text"
@@ -52,6 +54,30 @@
                             class="red"
                             @click="handleRemove(scope.$index, scope.row)"
                         >remove-client</el-button>
+                        <el-dropdown v-if="scope.row.client" @command="handleTenant">
+                            <el-button v-if="scope.row.client"
+                                type="text"
+                                icon="el-icon-lx-cascades"
+                                class="blue"
+                            >tenants</el-button>
+                             <el-dropdown-menu slot="dropdown">
+                                <el-dropdown-item :command="scope.row" id="list">list</el-dropdown-item>
+                                <el-dropdown-item  :command="scope.row" id="add">add</el-dropdown-item>
+                            </el-dropdown-menu>
+                        </el-dropdown>
+                        <el-dropdown v-if="scope.row.client" @command="handleRouter">
+                            <el-button 
+                                type="text"
+                                icon="el-icon-link"
+                                class="blue"
+                            >router</el-button>
+                             <el-dropdown-menu slot="dropdown">
+                                <el-dropdown-item :command="scope.row" id="up">up</el-dropdown-item>
+                                <el-dropdown-item  v-if="scope.row.router" :command="scope.row" id="down">down</el-dropdown-item>
+                                <el-dropdown-item  v-if="scope.row.router" :command="scope.row" id="graphql">graphql-ui</el-dropdown-item>
+                                <el-dropdown-item  v-if="scope.row.router" :command="scope.row" id="swagger">swagger</el-dropdown-item>
+                            </el-dropdown-menu>
+                        </el-dropdown>
                     </template>
                 </el-table-column>
             </el-table>
@@ -73,15 +99,28 @@
                 <el-button type="primary" @click="saveEdit">submit</el-button>
             </span>
         </el-dialog>
+        <Router ref="router" @routerUpdate="routerUpdate"></Router>
+        <TenantList ref="tenant"></TenantList>
+        <TenantAdd ref="tenantAdd"></TenantAdd>
     </div>
 </template>
 
 
 <script>
 import { schemaList,schemaGet,schemaDelete ,schemaUpdate,schemaCreate,schemaGenerate,schemaGenerateRemove} from '../../api/schema';
+import { routerList,routerRemove ,routerAdd} from '../../api/router';
 import  moment from 'moment'
+import Router from './Routers'
+import TenantList from './Tenant-list'
+import TenantAdd  from './Tenant-add'
 export default {
     name: 'basetable',
+    props:["serverData"],
+    components:{
+      Router,
+      TenantList,
+      TenantAdd
+    },
     data() {
          var newReg2 = (rule, value, callback) => {
             let pattrn = /^[a-zA-Z0-9]+[.](prisma)$/
@@ -130,8 +169,9 @@ export default {
     methods: {
         // 获取 easy-mock 的模拟数据
         getData() {
+            this.loading=true
             schemaList(this.query).then(res => {
-                console.log(res);
+                this.loading=false
                 this.tableData = res;
                 this.pageTotal = res.length;
             });
@@ -173,9 +213,7 @@ export default {
             this.addFlag=false
             this.idx = index;
             //this.form = row;
-           
             schemaGet(row.name).then(res=>{
-                
                 this.form={
                     content:res,
                     name:row.name
@@ -233,11 +271,40 @@ export default {
              })
            
         },
-        // 分页导航
-        handlePageChange(val) {
-            this.$set(this.query, 'pageIndex', val);
-            this.getData();
-        }
+        handleTenant(command,data){
+            if(data.$el.id=="list"){
+                this.$refs.tenant.show(command.name)
+           }
+           if(data.$el.id=="add"){
+               this.$refs.tenantAdd.show(command.name)
+           }
+         
+        },
+        
+       handleRouter(command,data){
+       
+           if(data.$el.id=="up"){
+               this.$refs.router.show(command.name)
+           }
+          if(data.$el.id=="down"){
+                routerRemove(command.name).then(res=>{
+                 this.getData();
+                 this.$message.success(`remove [${command.name}] success `);
+              }) 
+           }
+           if(data.$el.id=="graphql"){
+              const xx=`/graphql/${command.name.split('.')[0]}`
+              window.open(`http://${this.serverData.host}:${this.serverData.port}${xx}`, "_blank"); 
+           }
+           if(data.$el.id=="swagger"){
+                const xxx=`/api/${command.name.split('.')[0]}/swagger`
+                console.log(xxx)
+              window.open(`http://${this.serverData.host}:${this.serverData.port}${xxx}`, "_blank");
+           }
+       },
+       routerUpdate(){
+           this.getData();
+       }
     }
 };
 </script>

@@ -7,11 +7,17 @@ export default [
     {
         method: 'GET',
         url: '/tenant/list',
-        handler: Recover(async () => {
+        handler: Recover(async (req: express.Request) => {
             assert(await CheckTenantManagement(),'please init tenant')
+            const name = req.query.schemaName
+            console.log("----name",name)
             const PrismaClient = require('.prisma-multi-tenant/management').PrismaClient
             const prisma = new PrismaClient()
-            return prisma.tenant.findMany()
+            if(name) {
+              return prisma.tenant.findMany({ where: { schemaName: String(name) } })
+            }else{
+                return prisma.tenant.findMany()
+            }
         }),
     },
     // create

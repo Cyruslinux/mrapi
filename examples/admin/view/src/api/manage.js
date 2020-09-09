@@ -4,7 +4,7 @@ export const manageList = query => {
     return request({
         url: '/tenant/list',
         method: 'get',
-       // params: query
+       params: query
     });
 };
 

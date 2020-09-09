@@ -1,16 +1,6 @@
 <template>
-    <div>
-        <div class="crumbs">
-            <el-breadcrumb separator="/">
-                <el-breadcrumb-item>
-                    <i class="el-icon-lx-cascades"></i> tenant list
-                </el-breadcrumb-item>
-            </el-breadcrumb>
-        </div>
+    <el-dialog title="tenant" :visible.sync="tenantVisible" width="50%">
         <div class="container">
-            <div class="handle-box">
-                <el-button type="primary" icon="el-icon-plus" @click="handleAdd">add</el-button>
-            </div>
             <el-table
                 :data="tableData"
                 border
@@ -21,10 +11,8 @@
             >
                 <el-table-column prop="name" label="name"></el-table-column>
                 <el-table-column prop="url" label="url"></el-table-column>
-                <el-table-column prop="schemaName" label="schema name"></el-table-column>
                 <el-table-column label="operation" width="220" align="center">
                     <template slot-scope="scope">
-                       
                         <el-button
                             type="text"
                             icon="el-icon-delete"
@@ -34,82 +22,49 @@
                     </template>
                 </el-table-column>
             </el-table>
-           
         </div>
-
-        <!-- 编辑弹出框 -->
-        <el-dialog title="add tenant" :visible.sync="editVisible" width="30%">
-            <el-form ref="form" :model="form" label-width="120px"  :rules="rules">
-                <el-form-item  label="name" prop="name">
-                    <el-input v-model="form.name" placeholder="input tenant name">
-                    </el-input>
-                </el-form-item>
-                <el-form-item  label="url" prop="url">
-                    <el-input v-model="form.url" placeholder="input tenant db url">
-                    </el-input>
-                </el-form-item>
-                <el-form-item label="select schema" prop="schemaName">
-                     <el-select v-model="form.schemaName" placeholder="please select" >
-                         <el-option
-                            v-for="item in schemaSelectData"
-                            :key="item.value"
-                            :label="item.label"
-                            :value="item.value">
-                            </el-option>
-                        
-                     </el-select>
-                </el-form-item>
-            </el-form>
-            <span slot="footer" class="dialog-footer">
-                <el-button @click="editVisible = false">cancel</el-button>
-                <el-button type="primary" @click="saveEdit">submit</el-button>
-            </span>
-        </el-dialog>
-    </div>
+    </el-dialog>
 </template>
 
 <script>
 import { manageList,manageAdd,manageDelete} from '../../api/manage';
 import { schemaList} from '../../api/schema';
 export default {
-    name: 'basetable',
+    name: 'tenant',
     data() {
         return {
-            query: {
-            
-                pageIndex: 1,
-                pageSize: 10
-            },
             tableData: [],
-            multipleSelection: [],
-            delList: [],
-            editVisible: false,
-            pageTotal: 0,
+            tenantVisible: false,
             form: {
                 name:null,
                 url:null,
                 schemaName:null
             },
-            idx: -1,
-            id: -1,
             schemaSelectData:[],
             rules:{
                 name: [{ required: true, message: "input name", trigger: "blur" }],
                 url: [{ required: true, message: "input db rul", trigger: "blur" }],
                schemaName:[{ required: true, message: "select", trigger: "blur" }],
-            }
+            },
+            cacheSchemaName:null
         };
     },
     created() {
-        this.getData();
+        
         this.schemaSelect()
     },
    
     methods: {
+        show(schema){
+           this.tenantVisible=true
+           this.cacheSchemaName={schemaName:schema}
+           this.getData();
+        },
         async schemaSelect(){
            const res=await schemaList()
            let arr=[]
                for(let item of res){
+
                    arr.push({
                        label:item.name,
                        value:item.name
@@ -117,10 +72,8 @@ export default {
                }
                this.schemaSelectData= arr
         },
-        // 获取 easy-mock 的模拟数据
         getData() {
-            manageList(this.query).then(res => {
-               
+            manageList(this.cacheSchemaName).then(res => {
                 this.tableData = res;
                 this.pageTotal = res.length;
             });
