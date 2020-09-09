@@ -43,22 +43,31 @@ export default [
                 dalServer.dal.removeSchema(name)
             }
             const tenant = req.query.tenant
+           let  openAPI
+            if(openapi=='true'){
+              openAPI= {
+                enable:true,
+                options:{oasDir:`${process.cwd()}/node_modules/.prisma-mrapi/${name}/api`}
+             }
+            }else{
+                openAPI= {
+                    enable:false
+                 }
+            }
+            console.log(openAPI)
             if(tenant) {
                 dalServer.dal.addSchema(name, {
                        defaultTenant: {
                          name: String(tenant),
                        },
-                       openAPI: {
-                        enable:Boolean(openapi),
-                       }
+                       openAPI
                      })
             }else{
                 dalServer.dal.addSchema(name,
                     {
-                        openAPI: {
-                           enable:Boolean( openapi),
-                        }
-                })
+                        openAPI
+                    }
+                )
             }
 
             return 'ok'
