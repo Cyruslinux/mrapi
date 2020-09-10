@@ -5,6 +5,7 @@ import assert from 'assert'
 import { GetPrismaClientName ,GetRouters}from '../Service/CommonService'
 import { spawnShell, runShell } from '@mrapi/common'
 import dalServer from '../dal'
+const  description = require( '../../config/prisma/description.json')
 const multer = require('multer')
 var upload = multer().single('file')
 const uploadPromise = async (req: express.Request, res: express.Response) => {
@@ -37,7 +38,11 @@ export default [
             const arr = []
             const allClient = await GetPrismaClientName()
             const routers=GetRouters()
+            
             for (const item of files) {
+                if(!item.endsWith('.prisma')){
+                   continue
+                }
                 const info = fs.statSync(`config/prisma/${item}`)
                 const prefix = item.split('.')[0]
                 let _router=false
@@ -47,6 +52,7 @@ export default [
                         break
                     }
                 }
+            
                 arr.push({
                     name: item,
                     client: allClient.includes(prefix),
@@ -54,10 +60,11 @@ export default [
                     mtime: info.mtime,
                     birthtime: info.birthtime,
                     size: info.size,
-                    router:_router
+                    router:_router,
+                    description:description[item]
                 })
             }
-            return arr
+            return arr.sort((a,b)=> b.mtime.getTime()-a.mtime.getTime())
         }),
     },
     // 获取某个schema的文件内容
@@ -75,7 +82,10 @@ export default [
         url: '/schema/update/:name',
         handler: Recover(async (req: express.Request) => {
             assert(fs.existsSync(`config/prisma/${req.params.name}`), 'file is not exist')
+
             await fs.writeFileSync(`config/prisma/${req.params.name}`, req.body.content, 'utf-8')
+             description[req.params.name]=req.body.description
+             await fs.writeFileSync(`config/prisma/description.json`, JSON.stringify(description), 'utf-8')
             return 'ok'
         }),
     },
@@ -116,6 +126,9 @@ export default [
         handler: Recover(async (req: express.Request) => {
             assert(!fs.existsSync(`config/prisma/${req.params.name}`), 'file is exist')
             await fs.writeFileSync(`config/prisma/${req.params.name}`, req.body.content, 'utf-8')
+            description[req.params.name]=req.body.description
+            await fs.writeFileSync(`config/prisma/description.json`, JSON.stringify(description), 'utf-8')
+           
             return 'ok'
         }),
     },

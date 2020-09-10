@@ -51,7 +51,7 @@ export default [
              }
             }else{
                 openAPI= {
-                    enable:false
+                    enable:false,
                  }
             }
             console.log(openAPI)

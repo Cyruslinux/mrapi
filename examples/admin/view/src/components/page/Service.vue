@@ -90,6 +90,9 @@
                 <el-form-item label="schema name" prop="name">
                     <el-input placeholder="end with .prisma" v-model="form.name" :readOnly="!addFlag"></el-input>
                 </el-form-item>
+                <el-form-item label="description" prop="description">
+                    <el-input placeholder="input description" v-model="form.description" ></el-input>
+                </el-form-item>
                 <el-form-item label="content" prop="content">
                     <el-input type="textarea" :rows="20" v-model="form.content"></el-input>
                 </el-form-item>
@@ -131,20 +134,13 @@ export default {
             }
          };
         return {
-            query: {
-                address: '',
-                name: '',
-                pageIndex: 1,
-                pageSize: 10
-            },
             tableData: [],
-            multipleSelection: [],
-            delList: [],
             editVisible: false,
-            pageTotal: 0,
-            form: {},
-            idx: -1,
-            id: -1,
+            form: {
+                name:null,
+                content:null,
+                description:null,
+            },
             addFlag:false,
             loading:false,
             rules:{
@@ -173,21 +169,16 @@ export default {
             schemaList(this.query).then(res => {
                 this.loading=false
                 this.tableData = res;
-                this.pageTotal = res.length;
             });
         },
         //新增
         handleAdd(){
            this.addFlag=true
-           this.form={ content:null,name:null }
+           this.form={ content:null,name:null,description:null }
             this.editVisible = true;
 
         },
-        // 触发搜索按钮
-        handleSearch() {
-            this.$set(this.query, 'pageIndex', 1);
-            this.getData();
-        },
+       
         // 删除操作
         handleDelete(index, row) {
             // 二次确认删除
@@ -203,20 +194,15 @@ export default {
                 })
                 .catch(() => {});
         },
-        // 多选操作
-        handleSelectionChange(val) {
-            this.multipleSelection = val;
-        },
        
         // 编辑操作
         handleEdit(index, row) {
             this.addFlag=false
-            this.idx = index;
-            //this.form = row;
             schemaGet(row.name).then(res=>{
                 this.form={
                     content:res,
-                    name:row.name
+                    name:row.name,
+                    description:row.description
                 }
             })
             this.editVisible = true;
